@@ -4,13 +4,11 @@
 <script src="https://d3js.org/d3.v4.min.js"></script>
 
 <style type="text/css">
+  svg {
+    border: 1px solid #f0f;
+  }
 
-svg {
-  border:1px solid #f0f;
-}
-
-/*NEW CSS GOES HERE*/
-
+  /*NEW CSS GOES HERE*/
 </style>
 
 <body>
@@ -18,22 +16,92 @@ svg {
 
 <script>
 
-var data = [
-  {"date": "12/2018", "count": 233},
-  {"date": "11/2018", "count": 228},
-  {"date": "10/2018", "count": 262},
-  {"date": "09/2018", "count": 293},
-  {"date": "08/2018", "count": 350},
-  {"date": "07/2018", "count": 400},
-  {"date": "06/2018", "count": 225},
-  {"date": "05/2018", "count": 243},
-  {"date": "04/2018", "count": 221},
-  {"date": "03/2018", "count": 235},
-  {"date": "02/2018", "count": 235},
-  {"date": "01/2018", "count": 311}
-];
-window.data = data;
-  
+  var data = [
+    { "date": "12/2018", "count": 233 },
+    { "date": "11/2018", "count": 228 },
+    { "date": "10/2018", "count": 262 },
+    { "date": "09/2018", "count": 293 },
+    { "date": "08/2018", "count": 350 },
+    { "date": "07/2018", "count": 400 },
+    { "date": "06/2018", "count": 225 },
+    { "date": "05/2018", "count": 243 },
+    { "date": "04/2018", "count": 221 },
+    { "date": "03/2018", "count": 235 },
+    { "date": "02/2018", "count": 235 },
+    { "date": "01/2018", "count": 311 }
+  ];
+
+  window.data = data;
+  data.forEach(d => {
+    d.count = +d.count;
+    d.month = d.date.split('/')[0];
+  });
+
+  let radius = 10;
+
+  let margin = { top: 10, right: 10, bottom: 30, left: 30 };
+
+  let width = 720 - margin.left - margin.right,
+    height = 480 - margin.top - margin.bottom;
+
+  let svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+
+  let xScale = d3.scaleLinear()
+    .domain([1, 12])
+    .range([0, width])
+
+  let yScale = d3.scaleLinear()
+    .domain([200, 420])
+    .range([height, 0])
+
+  let xAxis = d3.axisBottom(xScale);
+  let yAxis = d3.axisLeft(yScale);
+
+  svg.append('g')
+    .attr('class', 'x axis')
+    .attr('transform', `translate(0, ${height})`)
+    .call(xAxis);
+
+  svg.append('g')
+    .attr('class', 'y axis')
+    .call(yAxis);
+
+  let ufoGroup = svg.selectAll('ufoGroup')
+    .data(data).enter().append('g')
+    .attr('class', 'ufoGroup')
+    .attr('transform', d => `translate(${xScale(d.month)}, ${yScale(d.count)})`);
+
+  ufoGroup.append('circle')
+    .attr('class', 'ufoCircle')
+    .attr('r', radius);
+
+  ufoGroup.append('text')
+    .attr('class', 'ufoText')
+    .attr('dx', radius)
+    .attr('dy', radius)
+    .text(d => d.count);
+
+
+  // let circles = svg.selectAll('.ufoCircle')
+  //   .data(data).enter().append('circle')
+  //   .attr('class', 'ufoCircle')
+  //   .attr('cx', d => xScale(d.month))
+  //   .attr('cy', d => yScale(d.count))
+  //   .attr('r', radius);
+
+  // let text = svg.selectAll('.ufoText')
+  //   .data(data).enter().append('text')
+  //   .attr('class', 'ufoText')
+  //   .attr('x', d => xScale(d.month))
+  //   .attr('y', d => yScale(d.count))
+  //   .text(d => d.count)
+  //   .attr('dx', radius)
+  //   .attr('dy', radius);
+
 //   *************************
 //     NEW CODE GOES HERE
 //   *************************
