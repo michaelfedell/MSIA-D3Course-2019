@@ -10,96 +10,130 @@ svg {
 }
 
 /*NEW CSS GOES HERE*/
+.axis line {
+  stroke-width:1px;
+  stroke: #ccc;
+  stroke-dasharray: 2px 2px;
+}
+
+.axis text {
+  font-size: 12px;
+  fill: #777;
+}
+
+.axis path {
+  display: none;
+}
 
 </style>
 
 <body>
+  <div id='titleDiv'></div>
 </body>
 
 <script>
 
-var data = [
-  {"date": "12/2018", "count": 233},
-  {"date": "11/2018", "count": 228},
-  {"date": "10/2018", "count": 262},
-  {"date": "09/2018", "count": 293},
-  {"date": "08/2018", "count": 350},
-  {"date": "07/2018", "count": 400},
-  {"date": "06/2018", "count": 225},
-  {"date": "05/2018", "count": 243},
-  {"date": "04/2018", "count": 221},
-  {"date": "03/2018", "count": 235},
-  {"date": "02/2018", "count": 235},
-  {"date": "01/2018", "count": 311}
-];
+// var data = [
+//   {"date": "12/2018", "count": 233},
+//   {"date": "11/2018", "count": 228},
+//   {"date": "10/2018", "count": 262},
+//   {"date": "09/2018", "count": 293},
+//   {"date": "08/2018", "count": 350},
+//   {"date": "07/2018", "count": 400},
+//   {"date": "06/2018", "count": 225},
+//   {"date": "05/2018", "count": 243},
+//   {"date": "04/2018", "count": 221},
+//   {"date": "03/2018", "count": 235},
+//   {"date": "02/2018", "count": 235},
+//   {"date": "01/2018", "count": 311}
+// ];
 
-window.data = data;
+d3.csv('data/ufo.csv', ready);
 
-console.log(data)
+function ready(error, data) {
 
+  if (error) return console.warn(error);
 
-var radius = 10;
+  window.data = data;
 
-// format data
-data.forEach(function(d) {
-  d.count = +d.count;
-  d.month = d.date.split('/')[0];
-});
+  let title = d3.select('#titleDiv');
 
-// create svg
-var margin = {top: 20, right: 10, bottom: 20, left: 30};
+  title.append('h1')
+    .attr('id', 'titleText')
+    .text('UFO Sightings in 2018');
 
-var width = 960 - margin.left - margin.right
-    
-height = 500 - margin.top - margin.bottom;
+  var radius = 10;
+  let parseTime = d3.timeParse('%m/%Y');
+  console.log(radius);
 
-var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  // format data
+  data.forEach(function(d) {
+    d.count = +d.count;
+    d.date = parseTime(d.date);
+    d.month = d.date.getMonth();
+    d.year = d.date.getFullYear();
+  });
 
-// scales
-var xScale = d3.scaleLinear()
-  .domain([1,12])
-  .range([0, width])
+  let startData = data.filter(d => d.year == 2018);
 
-var yScale = d3.scaleLinear()
-  .domain([0, 400])
-  .range([height, 0])
+  // create svg
+  var margin = {top: 20, right: 10, bottom: 20, left: 30};
 
-// add axes
-var xAxis = d3.axisBottom(xScale);
+  var width = 960 - margin.left - margin.right;
 
-var yAxis = d3.axisLeft(yScale);
+  height = 500 - margin.top - margin.bottom;
 
-svg.append('g')
-  .attr('class', 'x axis')
-  .attr('transform', 'translate(0,' + height + ')')
-  .call(xAxis);
+  var svg = d3.select("body").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-svg.append('g')
-  .attr('class', 'y axis')
-  .call(yAxis);
+  // scales
+  var xScale = d3.scaleTime()
+    .domain(d3.extent(startData, d => d.date))
+    .range([0, width]);
 
-// create groups
-var ufoGroup = svg.selectAll('.ufoGroup')
-  .data(data).enter().append('g')
-  .attr('class', 'ufoGroup')
-  .attr('transform', function(d) { return 'translate(' + xScale(d.month) + ',' + yScale(d.count) + ')'})
+  var yScale = d3.scaleLinear()
+    .domain(d3.extent(startData, d => d.count))
+    .range([height, 0]);
 
-// add circles to group
-ufoGroup.append('circle')
-  .attr('class', 'ufoCircle')
-  .attr('r', radius)
+  // add axes
+  var xAxis = d3.axisBottom(xScale)
+    .tickSize(-height);
 
-// add text to group
-ufoGroup.append('text')
-  .attr('class', 'ufoText')
-  .attr('dx', radius)
-  .attr('dy', radius)
-  .text(function(d) { return d.count;})
+  var yAxis = d3.axisLeft(yScale)
+    .tickSize(-width);
 
+  svg.append('g')
+    .attr('class', 'x axis')
+    .attr('transform', 'translate(0,' + height + ')')
+    .call(xAxis);
+
+  svg.append('g')
+    .attr('class', 'y axis')
+    .call(yAxis);
+
+  // create groups
+  var ufoGroup = svg.selectAll('.ufoGroup')
+    .data(startData).enter().append('g')
+    .attr('class', 'ufoGroup')
+    .attr('transform', function(d) { return 'translate(' + xScale(d.date) + ',' + yScale(d.count) + ')'});
+
+  // add circles to group
+  ufoGroup.append('circle')
+    .attr('class', 'ufoCircle')
+    .attr('r', radius)
+    .style('fill', 'limegreen');
+
+  // add text to group
+  ufoGroup.append('text')
+    .attr('class', 'ufoText')
+    .attr('dx', radius)
+    .attr('dy', radius)
+    .text(function(d) { return d.count;});
+
+}
 
 </script>
 
