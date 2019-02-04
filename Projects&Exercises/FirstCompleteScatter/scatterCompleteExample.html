@@ -26,6 +26,11 @@
 }
 
 /*NEW CSS GOES HERE*/
+.ufoLine {
+  fill: none;
+  stroke: darkgrey;
+  stroke-width: 3;
+}
 
 </style>
 
@@ -60,19 +65,26 @@ function dataSwap(datasetGroup) {
     .transition()
     .duration(transitionTime)
     .call(yAxis);
-  
+
   // move locations of each ufo group (each of which contain a circle and text)
   svg.selectAll('.ufoGroup')
     .data(thisDataGroup)
     .transition()
     .ease(d3.easeElastic)
     .duration(transitionTime)
-    .attr('transform', function(d) { return 'translate(' + xScale(d.date) + ',' + yScale(d.count) + ')'})
+    .attr('transform', function(d) { return 'translate(' + xScale(d.date) + ',' + yScale(d.count) + ')'});
 
-    // update text
-    svg.selectAll('.ufoText')
-      .data(thisDataGroup)
-      .text(function(d) { return d.count})
+  // update text
+  svg.selectAll('.ufoText')
+    .data(thisDataGroup)
+    .text(function(d) { return d.count});
+
+  // update line
+  svg.selectAll('.ufoLine')
+    .transition()
+    .ease(d3.easeElastic)
+    .duration(transitionTime)
+    .attr('d', lineGenerator(thisDataGroup));
 
   // update title
   d3.select('#titleText')
@@ -122,6 +134,10 @@ var xAxisGroup = svg.append("g")
 var yAxisGroup = svg.append("g")
     .attr("class", "y axis"); //gives group the classes `y` and `axis`
 
+let lineGenerator = d3.line()
+  .curve(d3.curveCardinal);
+
+
 // transforming data into json
 d3.csv("data/ufo.csv", ready)
 
@@ -155,6 +171,14 @@ function ready(error, data) {
 
   yAxisGroup.call(yAxis);
 
+  lineGenerator
+    .x(d => xScale(d.date))
+    .y(d => yScale(d.count))
+
+  svg.append('path')
+    .attr('class', 'ufoLine')
+    .attr('d', lineGenerator(startData));
+
   // create buttons
   var yearList = d3.set(data.map(function(d) { return d.year })).values();
 
@@ -164,7 +188,7 @@ function ready(error, data) {
     .enter().append('button')
     .text(function(d) { return d; })
     .on('click', function(d) {
-      dataSwap(d) 
+      dataSwap(d)
     })
 
 
