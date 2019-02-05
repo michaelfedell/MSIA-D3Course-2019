@@ -10,6 +10,9 @@
 </style>
 
 <body>
+  <div>
+    <h1>2018 Chicago Crimes</h1>
+  </div>
 </body>
 
 <script>
@@ -18,25 +21,38 @@
 
 //Define Margins and svg here:
 
-// var margin = 
+var margin = {top: 20, right: 90, bottom: 150, left: 30};
 
-// var width = 
+var width = 960 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
 
-// var height = 
-
-// var svg = 
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
 
 //Define xscale, yscale, xaxis, and yaxis here:
 
-// var xScale = 
+var xScale = d3.scaleBand()
+  .padding([0.1])
+  .rangeRound([0, width]);
 
-// var yScale = 
+var yScale = d3.scaleLinear()
+  .range([height, 0]);
 
-// var xAxis = 
+var xAxis = d3.axisBottom();
 
-// var yAxis = 
+var yAxis = d3.axisLeft()
+  .tickFormat(d3.format('.2s'));
 
+var xAxisGroup = svg.append("g")
+  .attr("class", "x axis")
+  .attr("transform", `translate(0,${height})`);
+
+var yAxisGroup = svg.append("g")
+  .attr("class", "y axis");
 
 // Reading in data here, then calling "ready" function:
 d3.csv("data/ChiCrime.csv", ready)
@@ -49,7 +65,7 @@ function ready(error, data) {
   data.forEach(function(d) {
     d.count = +d.count;
     d.year = +d.year;
-    d.violation = d['Primary Type'];
+    d.violation = d['Primary Type'].toLowerCase().split(' ').map(w => w.replace(w[0], w[0].toUpperCase())).join(' ');
   });
 
   // filtering for 2018 data
@@ -57,19 +73,31 @@ function ready(error, data) {
 
   // Define xScale and yScale domains here:
 
-  // xScale.domain([0, d3.max([fill in appropriate code here])]);
-  // yScale.domain();
+  xScale.domain(data2018.map(d => d.violation));
+  yScale.domain([0, d3.max(data2018, d => d.count)]);
+
+  xAxis.scale(xScale);
+  yAxis.scale(yScale);
 
   // define xAxisGroup and yAxisGroup here:
+  xAxisGroup.call(xAxis)
+    .selectAll('text')
+    .attr('transform', 'rotate(45) translate(5,-5)')
+    .style('text-anchor', 'start');
 
-  // var xAxisGroup = 
 
-  // var yAxisGroup = 
-
+  yAxisGroup.call(yAxis);
 
   // Create bars here:
-
-  // var bars = 
+  var bars = svg.selectAll('.bar')
+    .data(data2018)
+    .enter().append('rect')
+    .attr('class', 'bar')
+    .attr('x', d => xScale(d.violation))
+    .attr('y', d => yScale(d.count))
+    .attr('width', xScale.bandwidth())
+    .attr('height', d => height - yScale(d.count))
+    .attr('fill', 'crimson')
  }
 
 
